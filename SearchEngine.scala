@@ -28,8 +28,6 @@ object SearchEngine extends App {
 	
 	def fetch( url: String ) : String = {
 		val httpget = new HttpGet(url)
-		//println(httpget.getURI)
-		//Need to do try/catch block here
 		try {
 			val responseBody = new DefaultHttpClient().execute(httpget, new BasicResponseHandler())
 			responseBody
@@ -64,8 +62,6 @@ object SearchEngine extends App {
 		
 		 //Use Java's URL class to parse the URL
 		 //  and get the full URL string (including implied context)
-		//println("Examining: "+baseURL)
-
 		val contextURL = new java.net.URL(baseURL)
 
 		def getURL(x: String) = {
@@ -88,6 +84,7 @@ object SearchEngine extends App {
 		for(term <- terms; isTerm = fcn(term); if isTerm) yield term
 	}
 
+	//OLD crawlAndIndex, write revised in the overloaded function beyond this. Leave this one untouched for now.
 	def crawlAndIndex( url : String , pages : Int ) : List[PageSummary] = {
 
 		var currentLinks : List[String] = List("")
@@ -98,7 +95,6 @@ object SearchEngine extends App {
 
 		try {
 			for (x <- 1 to pages) {
-				//println("Loop: "+x+", Link: "+currentLink)
 				val html = fetch(currentLink)
 
 				val links = getLinks(html, currentLink)
@@ -133,6 +129,13 @@ object SearchEngine extends App {
 		//println("Completed with length: " + currentLinks.length)
 
 		summaries
+	}
+	
+	//TODO: Revise crawlAndIndex, mode should be "read" or "augment": for "read", no mixins are needed; 
+	//		 for "augment", Augmentable should be mixed in to the returned object. If weight is true, 
+	//		 then the returned object should be a WeightedIndexedPages. If weight is false, a plain IndexedPages is returned 	
+	def crawlAndIndex(startUrl: String, maxPages: Int, mode: String ="read", weight: Boolean = true): IndexedPages = {
+		new IndexedPages(List( new Page("http://google.com")))
 	}
 	
 	def printBest(query : List[String], pages : List[PageSummary]) = {
