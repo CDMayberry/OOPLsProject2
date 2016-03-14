@@ -7,8 +7,6 @@ import org.apache.http.message._
 import org.apache.http.params._
 import java.net.URL
 
-object CompletedSearch extends Exception { }
-
 object SearchEngine extends App {
 
 	def isAlphanumeric( str: String ) : Boolean = { 
@@ -135,14 +133,24 @@ object SearchEngine extends App {
 	//		 for "augment", Augmentable should be mixed in to the returned object. If weight is true, 
 	//		 then the returned object should be a WeightedIndexedPages. If weight is false, a plain IndexedPages is returned 	
 	def crawlAndIndex(startUrl: String, maxPages: Int, mode: String ="read", weight: Boolean = true): IndexedPages = {
-		new IndexedPages(List( new Page("http://google.com")))
+        //htmlElments = List("br")
+         val list = getTerms(fetch("http://google.com"),(str : String) => if(str.length > 1) true else false)
+		new IndexedPages(List( new Page("http://google.com", list)))
 	}
 	
 	def printBest(query : List[String], pages : List[PageSummary]) = {
 		val scores = for(x <- pages) yield (x.url, x.fracMatching(query))
 		for (x <- scores.sortBy(_._2).takeRight(5).reverse) println(x._1 + ": " + x._2.toString)
 	}
+    
+    def testFcn() = {
+        val link = "http://www.cplusplus.com/doc/tutorial/arrays/"
+        val list = getTerms(fetch(link),(str : String) => if(str.length > 1) true else false)
+        var testPage = new Page(link,list)
+        println("Test find: "+testPage.has("75"))
+    }
 
+    testFcn
 	//var results = crawlAndIndex("http://google.com",5)
 	//println(results.length)
 
@@ -155,5 +163,6 @@ object SearchEngine extends App {
 //		else
 //			println("")
 //	}
+    
 
 }

@@ -1,14 +1,56 @@
+import scala.util.matching.Regex
 
-//ISSUE: Not sure if PageSummary is meant to be used as a member variable of Page
-//			or if it should just be absorbed into the Page class.
+
+object CompletedSearch extends Exception { }
+object FoundSearch extends Exception { }
+
+//ISSUE: Corrected
 //TODO: Should have a 'method url' and any additional contents we deem necessary.
-class Page(val url: String) {
+class Page(val url: String, val terms: List[String]) {
+
+    def has(word: String): Boolean = {
+        //Checks for whole word including periods, commas, etc., and start or end of line and whitespaces.
+        //  This might be unnessary for whitespaces, as those should be eliminated, but redundancy isn't terrible.
+        val pattern = new Regex("(?<=^|\\s)"+word+"(?=(\\s|[.,;])|$)")
+        //val result = pattern findFirstIn 
+        try {
+            for(term <- terms) {
+                //println(term)
+                var result = pattern findFirstIn term
+                if(!result.isEmpty) throw FoundSearch
+            }
+            false
+        }
+        catch {
+            case FoundSearch => true
+        }
+    }
 	
+	def fracMatching( term: String ) : Float = {
+		if(terms.length > 0) {
+			val matching = terms.filter(_.toLowerCase() == term.toLowerCase()).length.toFloat
+			matching / terms.length.toFloat
+		}
+		else
+			0f
+	}
+	def fracMatching( newTerms: List[String] ) : Float = {
+		//println(terms)
+		if(terms.length > 0) {
+			newTerms match {
+				case x :: tail =>
+					terms.filter(_.toLowerCase() == x.toLowerCase()).length.toFloat / terms.length.toFloat + fracMatching(tail)
+				case Nil =>
+					0f
+			}
+		}
+		else
+			0f
+	}
 }
 
 
-//ISSUE: IndexedPages needs to have a mutable list,  but that seems to conflict with the purpose of the Augmentable trait.
-//			Does he just mean use scala.collection.mutable.Seq[Page]?
+//ISSUE: Corrected
 //TODO: Extend Iterable[Page], override iterator method, should use a mutable collection in the class to add pages
 //TODO: define a method numContaining(word: String): Double that returns the number of pages 
 //			that contain the given word as a whole word at least once (See doc for additional details)
@@ -16,7 +58,12 @@ class IndexedPages(val items: Iterable[Page]) extends Iterable[Page] {
 	override def iterator = items.iterator 
 	
 	def numContaining(word: String): Double = {
-		-1.0
+        var containing: Double = 0.0
+        for(page <- items) {
+            if(page.has(word))
+                containing = containing + 1
+        }
+        containing
 	}
 	
 	//TODO: Complete search
