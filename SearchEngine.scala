@@ -133,9 +133,18 @@ object SearchEngine extends App {
 	//		 for "augment", Augmentable should be mixed in to the returned object. If weight is true, 
 	//		 then the returned object should be a WeightedIndexedPages. If weight is false, a plain IndexedPages is returned 	
 	def crawlAndIndex(startUrl: String, maxPages: Int, mode: String ="read", weight: Boolean = true): IndexedPages = {
-        //htmlElments = List("br")
+
          val list = getTerms(fetch("http://google.com"),(str : String) => if(str.length > 1) true else false)
-		new IndexedPages(List( new Page("http://google.com", list)))
+		
+        
+        if(mode == "read") {
+            //new IndexedPages(List( new Page("http://google.com", list)))
+        }
+        else {
+            //class AugmentedIndexedPages extends IndexedPages(
+            //new IndexedPages(List( new Page("http://google.com", list))) with Augmentable[Page]
+        }
+        new IndexedPages(List( new Page("http://google.com", list)))
 	}
 	
 	def printBest(query : List[String], pages : List[PageSummary]) = {

@@ -1,4 +1,5 @@
 import scala.annotation.tailrec
+import scala.collection.generic.Growable
 
 //Weighted trait from PDF
 trait Weighted[A] {
@@ -32,9 +33,16 @@ trait Weighted[A] {
 
 //Augmentable trait from PDF
 trait Augmentable[A] {
-	val items: scala.collection.mutable.Seq[A] with
-	scala.collection.generic.Growable[A]
+	val items: scala.collection.mutable.Seq[A] with scala.collection.generic.Growable[A]
 
 	//TODO: Complete ADD
-	def add(newItem: A): Boolean = { true }
+	def add(newItem: A): Boolean = { 
+        if(items.contains(newItem)) {
+            false
+        }
+        else {
+            items += newItem
+            true
+        }
+    }
 }
