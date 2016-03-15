@@ -1,6 +1,6 @@
 
 //Define Query that takes in an Iterable[String]
-class Query(items: Iterable[String]) {
+class Query(items: Iterable[String]) { //Items are the query
 
 }
 

@@ -67,7 +67,7 @@ class IndexedPages(val items: Iterable[Page]) extends Iterable[Page] {
 	}
 	
 	//TODO: Complete search
-	def search(q: Query): SearchResults = {
+	def search(q: Query): SearchResults = { //I think this function should mimic printBest
 		q match {
             case wq: WeightedQuery => {
                 println("WeightedQuery")
