@@ -148,6 +148,9 @@ object SearchEngine extends App {
         val list = getTerms(fetch(link),(str : String) => if(str.length > 1) true else false)
         var testPage = new Page(link,list)
         println("Test find: "+testPage.has("75"))
+        var index = new IndexedPages(List(testPage))
+        index.search(new Query(List("String")))
+        index.search(new WeightedQuery(List("String")))
     }
 
     testFcn

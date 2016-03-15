@@ -68,8 +68,15 @@ class IndexedPages(val items: Iterable[Page]) extends Iterable[Page] {
 	
 	//TODO: Complete search
 	def search(q: Query): SearchResults = {
-		
-		new SearchResults()
+		q match {
+            case wq: WeightedQuery => {
+                println("WeightedQuery")
+            }
+            case nq: Query => {
+                println("Query")
+            }
+        }
+        new SearchResults()
 	}
 }
 

@@ -13,7 +13,7 @@ class WeightedQuery( override val items: Iterable[String]) extends Query(items) 
 	//	That is, terms should have unequal weights
 }
 
-//ISSUE: I how no clue how results gets anything, he makes no mention of it taking in any data.
+//ISSUE: Corrected
 //TODO: Complete scoring class SearchResults, Decide on a scoring method: TF-IDF is one good option you can research.
 class SearchResults() {
 	//TODO: Complete results method, see spec for additional details
