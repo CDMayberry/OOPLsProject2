@@ -18,16 +18,25 @@ class WeightedQuery(override val items: Iterable[String]) extends Query(items) w
 
 //ISSUE: Corrected
 //TODO: Complete scoring class SearchResults, Decide on a scoring method: TF-IDF is one good option you can research.
-class SearchResults(val Iterable[(Double,String)]) {
+class SearchResults(val items: scala.collection.mutable.Seq[(Double,String)]) {
 	//TODO: Complete results method, see spec for additional details
 	def results(): Iterable[(Double,String)] = {
 		//TODO: Iterable should be returned in decreasing order, so highest first. Hint: use SortWith method, see spec for example
-		
-		List((1.0,"test"))
+		items.sortWith(_._1>_._1)
 	}
 	
 	//TODO: Complete printTop method, prints top n results on the console, with score printed first and url second
 	def printTop(n: Int): Unit = {
-
+        val sortedItems = items.sortWith(_._1>_._1)
+        try {
+            for (x <- 1 to n) {
+                if(x > sortedItems.length)
+                    throw CompletedSearch
+                println("Score: "+sortedItems(x)._1+", Url: "+sortedItems(x)._2)
+            }
+        }
+        catch {
+			case CompletedSearch => println("Ran out of links to search")
+		}
 	}
 }
