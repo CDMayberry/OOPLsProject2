@@ -88,7 +88,7 @@ class WeightedIndexedPages(override val items: Iterable[Page]) extends IndexedPa
 	
 	//TODO: Complete numContaining 
 	override def numContaining(word: String): Double = {
-		-1.0
+		sumIf((w:Page)=> w.has(word))
 	}
 	
 	//TODO: Complete search
@@ -102,7 +102,8 @@ class WeightedIndexedPages(override val items: Iterable[Page]) extends IndexedPa
 		val total = unnormScores.foldLeft(0.0) {_+_}
 		val newScores = unnormScores.map { _ / total }
 		// TODO: create and return adjusted SearchResults from newScores [4 pts]
-		
+
+		val afterWeights = beforeWeights
 		beforeWeights //THIS IS NOT CORRECT
 	}
 }
