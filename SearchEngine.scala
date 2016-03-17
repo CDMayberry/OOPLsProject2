@@ -57,7 +57,7 @@ object SearchEngine extends App {
 		}
 	}
 		
-	def getLinks( html : String , baseURL : String) : List[String] = {
+	def getLinks( html : String , baseURL : String) : List[PageUrl] = {
 		// See http://www.mkyong.com/regular-expressions/how-to-extract-html-links-with-regular-expression/ for explanation of regex
 		val aTagRegex = """(?i)<a([^>]+)>(.+?)</a>""".r
 		val urlRegex = """\s*(?i)href\s*=\s*(\"([^"]*\")|'[^']*'|([^'">\s]+))""".r
@@ -81,10 +81,10 @@ object SearchEngine extends App {
 			catch {
 				case e: java.net.MalformedURLException => Unit
 			}
-			result
+			new PageUrl(result)
 		}
         
-		(cleaned map { getURL(_) } ).filter(_.length > 0).toList
+		(cleaned map { getURL(_) } ).filter(_.url.length > 0).toList
 
 	}
 	
@@ -92,54 +92,7 @@ object SearchEngine extends App {
 		val terms = stripToAlphanumeric(html).split(" ").toList
 		for(term <- terms; isTerm = fcn(term); if isTerm) yield term
 	}
-
-	//OLD crawlAndIndex, write revised in the overloaded function beyond this. Leave this one untouched for now.
-	def crawlAndIndex( url : String , pages : Int ) : List[PageSummary] = {
-
-		var currentLinks : List[String] = List("")
-		var spentLinks : List[String] = List("")
-		var summaries = List[PageSummary]()
-
-		var currentLink : String = url
-
-		try {
-			for (x <- 1 to pages) {
-				val html = fetch(currentLink)
-
-				val links = getLinks(html, currentLink)
-				val terms = getTerms(html,(str : String) => if(str.length > 1) true else false)
-
-				summaries = summaries:+ new PageSummary(currentLink,terms)
-
-				//Compare if new link is already in the list or already used
-				var newLinks = for (link <- links; if !currentLinks.contains(link) && !spentLinks.contains(link) && link != currentLink) yield link
-
-				//Handles case where multiple copies of same link exist on one page
-				newLinks = newLinks.distinct
-
-				//Remake list using new links without the currently examined link
-				currentLinks = currentLinks ::: newLinks diff List(currentLink)
-
-				//Add current link to the read links
-				spentLinks = currentLink :: spentLinks
-
-				//get element of list
-				currentLink = currentLinks.last
-				if(currentLink == "" || currentLink == " " || currentLink == null || currentLink == Unit) {
-					//If by some magic it runs out of links before selected number of pages.
-					throw CompletedSearch
-				}
-			}
-		}
-		catch {
-			case CompletedSearch => println("Ran out of links to search")
-		}
-
-		//println("Completed with length: " + currentLinks.length)
-
-		summaries
-	}
-	
+    
 	//TODO: Revise crawlAndIndex, mode should be "read" or "augment": for "read", no mixins are needed; 
 	//		 for "augment", Augmentable should be mixed in to the returned object. If weight is true, 
 	//		 then the returned object should be a WeightedIndexedPages. If weight is false, a plain IndexedPages is returned 	
@@ -147,35 +100,35 @@ object SearchEngine extends App {
         
         var pages = scala.collection.mutable.ArrayBuffer[Page]()
         
-        var currentLinks : List[String] = List("")
-		var spentLinks : List[String] = List("")
+        var currentLinks = List[PageUrl]()
+		var spentLinks = List[PageUrl]()
 
-		var currentLink : String = startUrl
+		var currentLink = new PageUrl(startUrl)
 
 		try {
 			for (x <- 1 to maxPages) {
-				val html = fetch(currentLink)
+				val html = fetch(currentLink.url)
                 
-				val links = getLinks(html, currentLink)
+				val links = getLinks(html, currentLink.url)
 				val terms = getTerms(html, filterFcn)
 
-				pages = pages :+ new Page(currentLink,terms)
+				pages = pages :+ new Page(currentLink.url,terms)
 
 				//Compare if new link is already in the list or already used
-				var newLinks = for (link <- links; if !currentLinks.contains(link) && !spentLinks.contains(link) && link != currentLink) yield link
+				var newLinks : List[PageUrl] = for (link <- links; if !currentLinks.contains(link) && !spentLinks.contains(link) && link != currentLink) yield link
 
 				//Handles case where multiple copies of same link exist on one page
 				newLinks = newLinks.distinct
 
 				//Remake list using new links without the currently examined link
-				currentLinks = currentLinks ::: newLinks diff List(currentLink)
+				currentLinks = currentLinks ::: newLinks.filterNot({_ == currentLink})
 
 				//Add current link to the read links
 				spentLinks = currentLink :: spentLinks
 
 				//get element of list
 				currentLink = currentLinks.last
-				if(currentLink == "" || currentLink == " " || currentLink == null || currentLink == Unit) {
+				if(currentLink.url == "" || currentLink.url == " " || currentLink == null) {
 					//If by some magic it runs out of links before selected number of pages.
 					throw CompletedSearch
 				}
