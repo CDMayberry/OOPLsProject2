@@ -58,12 +58,15 @@ object SearchEngine extends App {
                 println("Host Connection Error: "+i.getMessage)
 				""
             case j: java.lang.IllegalArgumentException =>
-                println("Illegal Argument Error: "+j.getMessage)
+                println("Illegal Argument Error: Illegal character found") //+j.getMessage
+				""
+            case h: org.apache.http.client.ClientProtocolException =>
+                println("Client Protocol Error: Bad host name") //+h.getMessage
 				""
 		}
 	}
 		
-	def getLinks( html : String , baseURL : String) : List[PageUrl] = {
+	def getLinks( html : String , baseURL : String) : List[String] = {
 		// See http://www.mkyong.com/regular-expressions/how-to-extract-html-links-with-regular-expression/ for explanation of regex
 		val aTagRegex = """(?i)<a([^>]+)>(.+?)</a>""".r
 		val urlRegex = """\s*(?i)href\s*=\s*(\"([^"]*\")|'[^']*'|([^'">\s]+))""".r
@@ -87,10 +90,10 @@ object SearchEngine extends App {
 			catch {
 				case e: java.net.MalformedURLException => Unit
 			}
-			new PageUrl(result)
+			result
 		}
         
-		(cleaned map { getURL(_) } ).filter(_.url.length > 0).toList
+		(cleaned map { getURL(_) } ).filter(_.length > 0).toList
 
 	}
 	
@@ -106,47 +109,38 @@ object SearchEngine extends App {
         
         var pages = scala.collection.mutable.ArrayBuffer[Page]()
         
-        var currentLinks = List[PageUrl]()
-		var spentLinks = List[PageUrl]()
+        var currentLinks = List[String]("")
+		var spentLinks = List[String]("")
 
-		var currentLink = new PageUrl(startUrl)
+		var currentLink = startUrl
 
 		try {
 			for (x <- 1 to maxPages) {
-				val html = fetch(currentLink.url)
-                
-				val links = getLinks(html, currentLink.url)
-				val terms = getTerms(html, filterFcn)
+				val html = fetch(currentLink)
 
-				pages = pages :+ new Page(currentLink.url,terms)
+				val links = getLinks(html, currentLink)
+				val terms = getTerms(html,(str : String) => if(str.length > 1) true else false)
+
+				 pages = pages:+ new Page(currentLink,terms)
 
 				//Compare if new link is already in the list or already used
-				var newLinks : List[PageUrl] = for (link <- links; if !currentLinks.contains(link) && !spentLinks.contains(link) && link != currentLink) yield link
+				var newLinks = for (link <- links; if !currentLinks.contains(link) && !spentLinks.contains(link) && link != currentLink) yield link
 
 				//Handles case where multiple copies of same link exist on one page
 				newLinks = newLinks.distinct
 
 				//Remake list using new links without the currently examined link
-				currentLinks = currentLinks ::: newLinks.filterNot({_ == currentLink})
+				currentLinks = currentLinks ::: newLinks diff List(currentLink)
 
 				//Add current link to the read links
 				spentLinks = currentLink :: spentLinks
-                
-                if(currentLinks.isEmpty) {
-                    currentLink = null
-                }
-                else {               
-                    //get element of list
-                    currentLink = currentLinks.last
-                }
 
-				if(currentLink == null) {
+				//get element of list
+				currentLink = currentLinks.last
+				if(currentLink == "" || currentLink == " " || currentLink == null || currentLink == Unit) {
 					//If by some magic it runs out of links before selected number of pages.
 					throw CompletedSearch
 				}
-                else if(currentLink.url == "" || currentLink.url == " ") {
-                    throw CompletedSearch
-                }
 			}
 		}
 		catch {
@@ -173,7 +167,7 @@ object SearchEngine extends App {
 	}
 	
 	def printBest(query : List[String], pages : List[PageSummary]) = {
-		val scores = for(x <- pages) yield (x.url, x.fracMatching(query))
+		val scores = for(x <- pages) yield (x, x.fracMatching(query))
 		for (x <- scores.sortBy(_._2).takeRight(5).reverse) println(x._1 + ": " + x._2.toString)
 	}
     
