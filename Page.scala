@@ -106,7 +106,7 @@ class WeightedIndexedPages(override val items: scala.collection.mutable.ArrayBuf
 		// TODO: create and return adjusted SearchResults from newScores [4 pts]
 
 		val urlList = beforeWeights.results.unzip._2
-		new SearchResults(newScores.zip(urlList))
+		new SearchResults(newScores.zip(urlList).toSeq)
 	}
 }
 
