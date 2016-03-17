@@ -78,7 +78,7 @@ class IndexedPages(val items: scala.collection.mutable.ArrayBuffer[Page]) extend
                 println("Query")
             }
         }
-        new SearchResults()
+        //new SearchResults(scala.collection.mutable.ArrayBuffer[(Double,String)]("1.0","Test"))
 	}
 }
 
