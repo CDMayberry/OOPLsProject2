@@ -5,10 +5,13 @@ class Query(items: Iterable[String]) { //Items are the query
 }
 
 // TODO: create a WeightedQuery class that inherits from Query and implements the Weighted Trait
-class WeightedQuery( override val items: Iterable[String]) extends Query(items) with Weighted[String] {
+class WeightedQuery(override val items: Iterable[String]) extends Query(items) with Weighted[String] {
 	
 	//TODO: Make this function correct
-	val weightingFn = (x: String) => -1.0
+	//val weightingFn = (x: String) => -1.0
+    val weightingFn = (myItem: String) => {
+		myItem.length.toDouble
+	}
 	//You can pick a default weighting scheme for WeightedQuery, but it has to be different than uniform.
 	//	That is, terms should have unequal weights
 }

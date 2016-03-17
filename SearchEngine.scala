@@ -8,6 +8,17 @@ import org.apache.http.params._
 import java.net.URL
 
 object SearchEngine extends App {
+    
+    def filterFcn(str: String): Boolean = {
+        val commonHtml = Set("div","span","b","u","i","p","br","h1","h2","h3","h4","h5","h6","ol","li","ul","dl","dt","dd","hr","br","blockquote","href","src")
+        if(str.length == 1 || commonHtml.contains(str)) {
+            false
+        }
+        else {
+            true
+        }
+    }
+    
 
 	def isAlphanumeric( str: String ) : Boolean = { 
 		val alphanumeric = (('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).toSet
@@ -133,18 +144,56 @@ object SearchEngine extends App {
 	//		 for "augment", Augmentable should be mixed in to the returned object. If weight is true, 
 	//		 then the returned object should be a WeightedIndexedPages. If weight is false, a plain IndexedPages is returned 	
 	def crawlAndIndex(startUrl: String, maxPages: Int, mode: String ="read", weight: Boolean = true): IndexedPages = {
-
-         val list = getTerms(fetch("http://google.com"),(str : String) => if(str.length > 1) true else false)
-		
         
+        var pages = List[Page]()
+        
+        var currentLinks : List[String] = List("")
+		var spentLinks : List[String] = List("")
+
+		var currentLink : String = startUrl
+
+		try {
+			for (x <- 1 to maxPages) {
+				val html = fetch(currentLink)
+                
+				val links = getLinks(html, currentLink)
+				val terms = getTerms(html, filterFcn)
+
+				pages = pages :+ new Page(currentLink,terms)
+
+				//Compare if new link is already in the list or already used
+				var newLinks = for (link <- links; if !currentLinks.contains(link) && !spentLinks.contains(link) && link != currentLink) yield link
+
+				//Handles case where multiple copies of same link exist on one page
+				newLinks = newLinks.distinct
+
+				//Remake list using new links without the currently examined link
+				currentLinks = currentLinks ::: newLinks diff List(currentLink)
+
+				//Add current link to the read links
+				spentLinks = currentLink :: spentLinks
+
+				//get element of list
+				currentLink = currentLinks.last
+				if(currentLink == "" || currentLink == " " || currentLink == null || currentLink == Unit) {
+					//If by some magic it runs out of links before selected number of pages.
+					throw CompletedSearch
+				}
+			}
+		}
+		catch {
+			case CompletedSearch => println("Ran out of links to search")
+		}
+           
         if(mode == "read") {
-            //new IndexedPages(List( new Page("http://google.com", list)))
+            new IndexedPages(pages)
         }
         else {
+            new IndexedPages(pages)
             //class AugmentedIndexedPages extends IndexedPages(
-            //new IndexedPages(List( new Page("http://google.com", list))) with Augmentable[Page]
+            //new IndexedPages(pages) with Augmentable[Page]
         }
-        new IndexedPages(List( new Page("http://google.com", list)))
+        
 	}
 	
 	def printBest(query : List[String], pages : List[PageSummary]) = {
@@ -153,8 +202,8 @@ object SearchEngine extends App {
 	}
     
     def testFcn() = {
-        val link = "http://www.cplusplus.com/doc/tutorial/arrays/"
-        val list = getTerms(fetch(link),(str : String) => if(str.length > 1) true else false)
+        val link = "https://en.wikipedia.org/wiki/Final_Fantasy_Type-0"
+        val list = getTerms(fetch(link),filterFcn)
         var testPage = new Page(link,list)
         println("Test find: "+testPage.has("75"))
         var index = new IndexedPages(List(testPage))
