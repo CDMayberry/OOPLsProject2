@@ -28,15 +28,21 @@ class SearchResults(val items: Seq[(Double,String)]) {
 	//TODO: Complete printTop method, prints top n results on the console, with score printed first and url second
 	def printTop(n: Int): Unit = {
         val sortedItems = items.sortWith(_._1>_._1)
+        //println("Made it! length: " + sortedItems.length)
+        //println(sortedItems)
         try {
-            for (x <- 1 to n) {
-                if(x > sortedItems.length)
+            for (x <- 0 to n) {
+                //println("X: "+x)
+                if(x == sortedItems.length)
                     throw CompletedSearch
+                //println("OH YEAH! "+x)
                 println("Score: "+sortedItems(x)._1+", Url: "+sortedItems(x)._2)
+                
             }
         }
         catch {
-			case CompletedSearch => println("Ran out of links to search")
+			case CompletedSearch => Unit
 		}
+        //println("I'm out!")
 	}
 }

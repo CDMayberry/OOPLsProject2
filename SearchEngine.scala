@@ -36,23 +36,29 @@ object SearchEngine extends App {
 	}
 	
 	def fetch( url: String ) : String = {
-		val httpget = new HttpGet(url)
 		try {
+            val httpget = new HttpGet(url)
 			val responseBody = new DefaultHttpClient().execute(httpget, new BasicResponseHandler())
 			responseBody
 		}
 		catch {
 			case e: org.apache.http.client.HttpResponseException =>
-				println("Error "+e.getMessage)
+				println("Http Response Error: "+e.getMessage)
 				""
 			case f: java.lang.IllegalStateException =>
-				println("Error: "+f.getMessage)
+				println("Illegal State Error: "+f.getMessage)
 				""
 			case g: javax.net.ssl.SSLPeerUnverifiedException =>
-				println("Error: "+g.getMessage)
+				println("SSL Unverified Error: "+g.getMessage)
 				""
 			case h: javax.net.ssl.SSLException =>
-				println("Error: SSL Exception, full message suppressed") //h.getMessage
+				println("SSL Error: SSL Exception, full message suppressed") //h.getMessage
+				""
+            case i: org.apache.http.conn.HttpHostConnectException =>
+                println("Host Connection Error: "+i.getMessage)
+				""
+            case j: java.lang.IllegalArgumentException =>
+                println("Illegal Argument Error: "+j.getMessage)
 				""
 		}
 	}
@@ -125,13 +131,22 @@ object SearchEngine extends App {
 
 				//Add current link to the read links
 				spentLinks = currentLink :: spentLinks
+                
+                if(currentLinks.isEmpty) {
+                    currentLink = null
+                }
+                else {               
+                    //get element of list
+                    currentLink = currentLinks.last
+                }
 
-				//get element of list
-				currentLink = currentLinks.last
-				if(currentLink.url == "" || currentLink.url == " " || currentLink == null) {
+				if(currentLink == null) {
 					//If by some magic it runs out of links before selected number of pages.
 					throw CompletedSearch
 				}
+                else if(currentLink.url == "" || currentLink.url == " ") {
+                    throw CompletedSearch
+                }
 			}
 		}
 		catch {
@@ -163,13 +178,21 @@ object SearchEngine extends App {
 	}
     
     def testFcn() = {
-        val link = "https://en.wikipedia.org/wiki/Final_Fantasy_Type-0"
-        val list = getTerms(fetch(link),filterFcn)
-        var testPage = new Page(link,list)
-        println("Test find: "+testPage.has("75"))
-        var index = new IndexedPages(scala.collection.mutable.ArrayBuffer(testPage))
-        index.search(new Query(List("String")))
-        index.search(new WeightedQuery(List("String")))
+        //val link = "https://en.wikipedia.org/wiki/Final_Fantasy_Type-0"
+        //val list = getTerms(fetch(link),filterFcn)
+        //var testPage = new Page(link,list)
+        //println("Test find: "+testPage.has("75"))
+        //var index = new IndexedPages(scala.collection.mutable.ArrayBuffer(testPage))
+        //index.search(new Query(List("String")))
+        //index.search(new WeightedQuery(List("String")))
+        
+        val pages = SearchEngine.crawlAndIndex("https://my.gcc.edu/ics", 20,
+        weight=false)
+        val q = new WeightedQuery(List("gcc", "mcnulty", "god"))
+        pages.search(q).printTop(10)
+        println("")
+        val q2 = new Query(List("gcc", "mcnulty", "god"))
+        pages.search(q2).printTop(5)
     }
 
     testFcn
