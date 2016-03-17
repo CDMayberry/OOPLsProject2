@@ -86,7 +86,7 @@ class IndexedPages(val items: scala.collection.mutable.ArrayBuffer[Page]) extend
 class WeightedIndexedPages(override val items: scala.collection.mutable.ArrayBuffer[Page]) extends IndexedPages(items) with Weighted[Page] { //Not sure if Weighted type is correct here
 	
 	//TODO: Complete weightingFn
-	val weightingFn = (x: Page) => -1.0
+	val weightingFn = (x: Page) => 1.0 / x.url.length()
 	
 	//TODO: Complete numContaining 
 	override def numContaining(word: String): Double = {
