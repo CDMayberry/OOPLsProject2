@@ -1,4 +1,5 @@
 import scala.util.matching.Regex
+import scala.math.log
 
 
 object CompletedSearch extends Exception { }
@@ -70,12 +71,34 @@ class IndexedPages(val items: scala.collection.mutable.ArrayBuffer[Page]) extend
 	def search(q: Query): SearchResults = {
 		q match {
             case wq: WeightedQuery => {
-                println("WeightedQuery")
-                new SearchResults(Seq((1.0,"Test")))
+            
+                var results = scala.collection.mutable.Seq[(Double,String)]()
+                items.foreach((page: Page) => {
+                    var score = 0.0
+                    for(term <- wq.items) {
+                        val tf = page.fracMatching(term)
+                        val idf = Math.log(items.length/(1+numContaining(term)))
+                        score += tf*idf*wq.weightingFn(term)
+                    }
+                    results = results :+ (score,page.url)
+                })
+                
+                new SearchResults(results)
             }
             case nq: Query => {
-                println("Query")
-                new SearchResults(Seq((1.0,"Test")))
+            
+                var results = scala.collection.mutable.Seq[(Double,String)]()
+                items.foreach((page: Page) => {
+                    var score = 0.0
+                    for(term <- nq.items) {
+                        val tf = page.fracMatching(term)
+                        val idf = Math.log(items.length/(1+numContaining(term)))
+                        score += tf*idf
+                    }
+                    results = results :+ (score,page.url)
+                })
+                
+                new SearchResults(results)
             }
         }
         //new SearchResults(scala.collection.mutable.ArrayBuffer[(Double,String)]("1.0","Test"))
