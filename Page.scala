@@ -54,7 +54,7 @@ class Page(val url: String, val terms: List[String]) {
 //TODO: Extend Iterable[Page], override iterator method, should use a mutable collection in the class to add pages
 //TODO: define a method numContaining(word: String): Double that returns the number of pages 
 //			that contain the given word as a whole word at least once (See doc for additional details)
-class IndexedPages(val items: Iterable[Page]) extends Iterable[Page] {	
+class IndexedPages(val items: scala.collection.mutable.ArrayBuffer[Page]) extends Iterable[Page] {	
 	override def iterator = items.iterator 
 	
 	def numContaining(word: String): Double = {
@@ -67,12 +67,14 @@ class IndexedPages(val items: Iterable[Page]) extends Iterable[Page] {
 	}
 	
 	//TODO: Complete search
-	def search(q: Query): SearchResults = { //I think this function should mimic printBest
+	def search(q: Query): SearchResults = {
 		q match {
             case wq: WeightedQuery => {
+                
                 println("WeightedQuery")
             }
             case nq: Query => {
+                
                 println("Query")
             }
         }
@@ -81,7 +83,7 @@ class IndexedPages(val items: Iterable[Page]) extends Iterable[Page] {
 }
 
 //TODO: Create a class WeightedIndexedPages that extends IndexedPages and implements the Weighted trait.
-class WeightedIndexedPages(override val items: Iterable[Page]) extends IndexedPages(items) with Weighted[Page] { //Not sure if Weighted type is correct here
+class WeightedIndexedPages(override val items: scala.collection.mutable.ArrayBuffer[Page]) extends IndexedPages(items) with Weighted[Page] { //Not sure if Weighted type is correct here
 	
 	//TODO: Complete weightingFn
 	val weightingFn = (x: Page) => -1.0

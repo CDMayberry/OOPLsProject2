@@ -145,7 +145,7 @@ object SearchEngine extends App {
 	//		 then the returned object should be a WeightedIndexedPages. If weight is false, a plain IndexedPages is returned 	
 	def crawlAndIndex(startUrl: String, maxPages: Int, mode: String ="read", weight: Boolean = true): IndexedPages = {
         
-        var pages = List[Page]()
+        var pages = scala.collection.mutable.ArrayBuffer[Page]()
         
         var currentLinks : List[String] = List("")
 		var spentLinks : List[String] = List("")
@@ -185,13 +185,21 @@ object SearchEngine extends App {
 			case CompletedSearch => println("Ran out of links to search")
 		}
            
-        if(mode == "read") {
-            new IndexedPages(pages)
+        if(mode == "read") { //Read-Only
+            if(weight) {
+                new WeightedIndexedPages(pages)
+            }
+            else {
+                new IndexedPages(pages)
+            }
         }
-        else {
-            new IndexedPages(pages)
-            //class AugmentedIndexedPages extends IndexedPages(
-            //new IndexedPages(pages) with Augmentable[Page]
+        else {              //Augmentable
+            if(weight) {
+                new WeightedIndexedPages(pages) with Augmentable[Page]
+            }
+            else {
+                new IndexedPages(pages) with Augmentable[Page]
+            }
         }
         
 	}
@@ -206,7 +214,7 @@ object SearchEngine extends App {
         val list = getTerms(fetch(link),filterFcn)
         var testPage = new Page(link,list)
         println("Test find: "+testPage.has("75"))
-        var index = new IndexedPages(List(testPage))
+        var index = new IndexedPages(scala.collection.mutable.ArrayBuffer(testPage))
         index.search(new Query(List("String")))
         index.search(new WeightedQuery(List("String")))
     }
