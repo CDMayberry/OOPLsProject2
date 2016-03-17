@@ -70,12 +70,12 @@ class IndexedPages(val items: scala.collection.mutable.ArrayBuffer[Page]) extend
 	def search(q: Query): SearchResults = {
 		q match {
             case wq: WeightedQuery => {
-                
                 println("WeightedQuery")
+                new SearchResults(Seq((1.0,"Test")))
             }
             case nq: Query => {
-                
                 println("Query")
+                new SearchResults(Seq((1.0,"Test")))
             }
         }
         //new SearchResults(scala.collection.mutable.ArrayBuffer[(Double,String)]("1.0","Test"))
